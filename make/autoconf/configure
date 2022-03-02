@@ -294,7 +294,8 @@ CONFIGURE_COMMAND_LINE="${conf_quoted_arguments[@]}"
 if test "x$conf_legacy_crosscompile" != "x"; then
   echo "Error: Legacy autoconf cross-compilation flags are not supported."
   echo "You specified: $conf_legacy_crosscompile."
-  echo "It is recommend you use --current-platform --openjdk-target."
+  echo "It is recommend you use --current-platform and --openjdk-target"
+  echo "for cross compiling Java."
   exit 1
 fi
 
