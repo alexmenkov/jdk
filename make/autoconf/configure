@@ -227,6 +227,7 @@ function shell_quote() {
 
 conf_processed_arguments=()
 conf_quoted_arguments=()
+conf_explicit_platform=
 conf_openjdk_target=
 
 for conf_option
@@ -234,6 +235,9 @@ do
 
   # Process (and remove) our own extensions that will not be passed to autoconf
   case $conf_option in
+    --current-platform=*)
+      conf_explicit_platform=`expr "X$conf_option" : '[^=]*=\(.*\)'`
+      ;;
     --openjdk-target=*)
       conf_openjdk_target=`expr "X$conf_option" : '[^=]*=\(.*\)'`
       ;;
@@ -288,22 +292,23 @@ done
 CONFIGURE_COMMAND_LINE="${conf_quoted_arguments[@]}"
 
 if test "x$conf_legacy_crosscompile" != "x"; then
-  if test "x$conf_openjdk_target" != "x"; then
-    echo "Error: Specifying --openjdk-target together with autoconf"
-    echo "legacy cross-compilation flags is not supported."
-    echo "You specified: --openjdk-target=$conf_openjdk_target and $conf_legacy_crosscompile."
-    echo "The recommended use is just --openjdk-target."
-    exit 1
-  else
-    echo "Warning: You are using legacy autoconf cross-compilation flags."
-    echo "It is recommended that you use --openjdk-target instead."
-    echo ""
-  fi
+  echo "Error: Legacy autoconf cross-compilation flags are not supported."
+  echo "You specified: $conf_legacy_crosscompile."
+  echo "It is recommend you use --current-platform --openjdk-target."
+  exit 1
 fi
 
 if test "x$conf_openjdk_target" != "x"; then
-  conf_build_platform=`sh $conf_script_dir/build-aux/config.guess`
-  conf_processed_arguments=("--build=$conf_build_platform" "--host=$conf_openjdk_target" "--target=$conf_openjdk_target" "${conf_processed_arguments[@]}")
+  if test "x$conf_explicit_platform" != "x"; then
+    conf_processed_arguments=("--host=$conf_openjdk_target" "--target=$conf_openjdk_target" "${conf_processed_arguments[@]}")
+  else
+    conf_build_platform=`sh $conf_script_dir/build-aux/config.guess`
+    conf_processed_arguments=("--build=$conf_build_platform" "--host=$conf_openjdk_target" "--target=$conf_openjdk_target" "${conf_processed_arguments[@]}")
+  fi
+fi
+
+if test "x$conf_explicit_platform" != "x"; then
+  conf_processed_arguments=("--build=$conf_explicit_platform" "${conf_processed_arguments[@]}")
 fi
 
 # Make configure exit with error on invalid options as default.
@@ -338,10 +343,16 @@ if test $conf_result_code -eq 0; then
     cat <<EOT
 
 Additional (non-autoconf) OpenJDK Options:
+  --current-platform      Explicitly set the current platform the JDK is being
+                          compiled on. This fully overrides automatic platform
+                          detection and it is recommended you don't set this
+                          unless you have a good reason to and know what you
+                          are doing.
   --openjdk-target=TARGET cross-compile with TARGET as target platform
                           (i.e. the one you will run the resulting binary on).
                           Equivalent to --host=TARGET --target=TARGET
-                          --build=<current platform>
+                          --build=<current platform>, or --current-platform if
+                          you have explicitly set it.
   --debug-configure       Run the configure script with additional debug
                           logging enabled.
 
