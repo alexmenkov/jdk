@@ -274,7 +274,7 @@ do
   # Check for certain autoconf options that require extra action
   case $conf_option in
     -build | --build | --buil | --bui | --bu |-build=* | --build=* | --buil=* | --bui=* | --bu=*)
-      conf_build_set=true
+      conf_build_set=true ;;
     -target | --target | --targe | --targ | --tar | --ta | --t | -target=* | --target=* | --targe=* | --targ=* | --tar=* | --ta=* | --t=*)
       conf_unsafe_crosscompile="$conf_unsafe_crosscompile $conf_option" ;;
     -host | --host | --hos | --ho | -host=* | --host=* | --hos=* | --ho=*)
