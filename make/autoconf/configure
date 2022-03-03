@@ -273,6 +273,8 @@ do
 
   # Check for certain autoconf options that require extra action
   case $conf_option in
+    -build | --build | --buil | --bui | --bu |-build=* | --build=* | --buil=* | --bui=* | --bu=*)
+      conf_build_set=true
     -target | --target | --targe | --targ | --tar | --ta | --t | -target=* | --target=* | --targe=* | --targ=* | --tar=* | --ta=* | --t=*)
       conf_unsafe_crosscompile="$conf_unsafe_crosscompile $conf_option" ;;
     -host | --host | --hos | --ho | -host=* | --host=* | --hos=* | --ho=*)
@@ -290,18 +292,23 @@ if test "x$conf_unsafe_crosscompile" != "x"; then
     echo "Error: --openjdk-target was specified together with"
     echo "incompatible autoconf cross-compilation flags."
     echo "You specified: --openjdk-target=$conf_openjdk_target and $conf_unsafe_crosscompile."
-    echo "The recommended use is just --openjdk-target."
+    echo "It is recommended that you only use --openjdk-target."
     exit 1
   else
     echo "Warning: You are using unsafe autoconf cross-compilation flags."
-    echo "It is recommended that you use --openjdk-target instead."
+    echo "It is highly recommended that you use --openjdk-target instead."
     echo ""
   fi
 fi
 
 if test "x$conf_openjdk_target" != "x"; then
-  conf_build_platform=`sh $conf_script_dir/build-aux/config.guess`
-  conf_processed_arguments=("--build=$conf_build_platform" "--host=$conf_openjdk_target" "--target=$conf_openjdk_target" "${conf_processed_arguments[@]}")
+  conf_processed_arguments=("--host=$conf_openjdk_target" "--target=$conf_openjdk_target" "${conf_processed_arguments[@]}")
+  
+  # If --build has been explicitly set don't override that flag with our own
+  if test "x$conf_build_set" != xtrue; then
+    conf_build_platform=`sh $conf_script_dir/build-aux/config.guess`
+    conf_processed_arguments=("--build=$conf_build_platform" "${conf_processed_arguments[@]}")
+  fi
 fi
 
 # Make configure exit with error on invalid options as default.
